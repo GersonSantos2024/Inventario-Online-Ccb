@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Inventário - App Inventário Ccb Online </title>
+    <!-- Política de Segurança (CSP): Bloqueia scripts hackers externos -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://congregacaocristanobrasil.org.br; connect-src 'self' blob:;">
     
-    <!-- Bibliotecas PDF -->
+    <title>Inventário - Múltiplas Casas de Oração</title>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    
-    <!-- Biblioteca Leitor de Câmera (Mais Estável) -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -24,10 +24,30 @@
 
         body { display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
 
-        /* Modal de Seleção */
+        /* --- TELA DE LOGIN SEGURA --- */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            z-index: 99999; display: flex; align-items: center; justify-content: center;
+        }
+        .login-card {
+            background: #fff; padding: 40px 30px; border-radius: 12px; text-align: center; max-width: 90%; width: 350px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .login-card img { height: 60px; margin-bottom: 20px; }
+        .login-card h2 { margin-bottom: 20px; color: #333; font-size: 1.4rem; }
+        .login-card input {
+            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ced4da;
+            border-radius: 6px; font-size: 1rem; text-align: center;
+        }
+        .login-card button { background-color: #1e3c72; font-size: 1.1rem; }
+        .login-card button:hover { background-color: #162c55; }
+        #loginError { color: var(--danger); font-size: 0.9rem; margin-top: 10px; display: none; font-weight: 600; }
+
+        /* Modal de Seleção de Câmera/PC */
         #modeOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 9999; display: flex;
+            background: rgba(0,0,0,0.8); z-index: 9999; display: none; /* Escondido até fazer login */
             align-items: center; justify-content: center;
         }
         .mode-card { background: #fff; padding: 30px; border-radius: 10px; text-align: center; max-width: 90%; width: 400px; }
@@ -39,38 +59,33 @@
         }
         .mode-btn:hover { background: var(--primary); color: white; }
         
-        /* Sidebar */
-        .sidebar {
-            width: 380px; background-color: var(--panel-bg); padding: 20px;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow-y: auto; z-index: 10;
-        }
+        /* O restante do seu CSS original */
+        .sidebar { width: 380px; background-color: var(--panel-bg); padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow-y: auto; z-index: 10; filter: blur(4px); pointer-events: none; transition: 0.3s; }
+        .sidebar.unlocked { filter: blur(0); pointer-events: all; }
         .header-logo { text-align: center; margin-bottom: 20px; }
         .header-logo img { height: 70px; margin-bottom: 10px; }
         .header-logo h1 { font-size: 1.2rem; color: var(--primary); }
 
         .input-group { margin-bottom: 12px; }
         .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
-        input[type="file"], input[type="text"], select {
-            width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.9rem; background-color: #fff;
+        input[type="file"], input[type="text"], input[type="password"], select {
+            width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.9rem; background-color: #fff; outline: none;
         }
-        input:focus, select:focus { border-color: var(--primary); outline: none; }
+        input:focus, select:focus { border-color: var(--primary); }
         input:read-only, select:disabled { background-color: #e9ecef; cursor: not-allowed; }
 
-        button {
-            width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none;
-            border-radius: 5px; font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 10px;
-        }
+        button { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         button:hover { background-color: var(--primary-hover); }
         button:disabled { background-color: #a5c7c3; cursor: not-allowed; }
         .btn-danger { background-color: var(--danger); }
 
-        /* Leitor Câmera */
         #reader-container { display: none; margin-top: 15px; width: 100%; border-radius: 8px; overflow: hidden; border: 2px solid var(--primary); background: #000; min-height: 250px;}
         #reader { width: 100%; }
         #camera-status { text-align: center; font-size: 0.85rem; font-weight: bold; padding: 10px; color: white; background: #333; }
 
-        /* Main Dashboard */
-        .main-content { flex: 1; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
+        .main-content { flex: 1; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; filter: blur(4px); pointer-events: none; transition: 0.3s; }
+        .main-content.unlocked { filter: blur(0); pointer-events: all; }
+        
         .dashboard-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
         .card { background: var(--panel-bg); padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; }
         .card h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
@@ -85,7 +100,6 @@
         .bg-success { background-color: var(--success); } .bg-danger { background-color: var(--danger); } .bg-warning { background-color: var(--warning); color: #333; }
         .alerta-ext { color: #d9534f; font-weight: 600; font-size: 0.85em; display: block; margin-top: 4px; }
 
-        /* CORREÇÃO DO BLOQUEIO DE ROLAGEM NO MOBILE */
         @media (max-width: 768px) {
             body { flex-direction: column; display: block; overflow-y: auto; height: auto; min-height: 100vh; }
             .sidebar { width: 100%; padding: 15px; box-shadow: none; overflow-y: visible; }
@@ -98,18 +112,30 @@
 </head>
 <body>
 
+    <!-- TELA DE LOGIN (PROTEÇÃO PRIMÁRIA) -->
+    <div id="loginOverlay">
+        <div class="login-card">
+            <img src="https://congregacaocristanobrasil.org.br/assets/images/logo-ccb-light.png" style="background:#333; padding:5px; border-radius:8px;" alt="Logotipo">
+            <h2>Acesso Restrito</h2>
+            <input type="password" id="sysPassword" placeholder="Digite a Senha">
+            <button onclick="checkAccess()">Entrar no Sistema</button>
+            <p id="loginError">Senha Incorreta. Tente novamente.</p>
+        </div>
+    </div>
+
+    <!-- SELEÇÃO DE MODO (Só aparece após login) -->
     <div id="modeOverlay">
         <div class="mode-card">
             <h2>Como você vai usar?</h2>
-            <button class="mode-btn" onclick="setAppMode('desktop')">💻 Computador</button>
+            <button class="mode-btn" onclick="setAppMode('desktop')">💻 Computador (Pistola USB)</button>
             <button class="mode-btn" onclick="setAppMode('mobile')">📱 Celular (Câmera)</button>
         </div>
     </div>
 
-    <div class="sidebar">
+    <!-- MENU LATERAL -->
+    <div class="sidebar" id="appSidebar">
         <div class="header-logo">
-            <!-- Caso a logo quebre, troque este link futuramente -->
-            <img src="https://congregacaocristanobrasil.org.br/assets/images/logo-ccb-light.png" alt="Logotipo">
+            <img src="https://congregacaocristanobrasil.org.br/assets/images/logo-ccb-light.png" style="background:#333; padding:5px; border-radius:8px;" alt="Logotipo">
             <h1>INVENTÁRIO ATIVO</h1>
         </div>
 
@@ -132,7 +158,7 @@
             <label>Responsáveis e Data</label>
             <input type="text" id="nomeInventariante" placeholder="Nome do Inventariante" style="margin-bottom: 8px;">
             <input type="text" id="setorAdministrativo" placeholder="Setor Administrativo" style="margin-bottom: 8px;">
-            <input type="text" id="dataInventario" placeholder="Data do Inventário">
+            <input type="date" id="dataInventario" placeholder="Data do Inventário">
         </div>
 
         <button id="btnStart" onclick="startInventory()">Iniciar Inventário</button>
@@ -150,7 +176,8 @@
         <button id="btnFinalize" class="btn-danger" onclick="finalizeInventory()" disabled>Finalizar e Gerar PDF</button>
     </div>
 
-    <div class="main-content">
+    <!-- DASHBOARD PRINCIPAL -->
+    <div class="main-content" id="appMain">
         <div class="dashboard-cards">
             <div class="card"><h3>Total</h3><div class="value c-total" id="countTotal">0</div></div>
             <div class="card"><h3>Lidos</h3><div class="value c-located" id="countLocated">0</div></div>
@@ -168,11 +195,48 @@
     </div>
 
     <script>
+        // ==========================================
+        // 1. SISTEMA DE AUTENTICAÇÃO E SEGURANÇA
+        // ==========================================
+        function checkAccess() {
+            const pwd = document.getElementById('sysPassword').value;
+            
+            // ---> ALTERE SUA SENHA AQUI <---
+            const senhaCorreta = "ccb2026"; 
+
+            if (pwd === senhaCorreta) {
+                // Desbloqueia tela
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('modeOverlay').style.display = 'flex';
+                document.getElementById('appSidebar').classList.add('unlocked');
+                document.getElementById('appMain').classList.add('unlocked');
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+                document.getElementById('sysPassword').value = '';
+            }
+        }
+
+        // Permite logar apertando "Enter"
+        document.getElementById('sysPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkAccess();
+        });
+
+        // Função Anti-Hacker (Sanitização XSS) - Impede códigos ocultos no Excel
+        function sanitizeText(str) {
+            if (!str) return "-";
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', "/": '&#x2F;' };
+            const reg = /[&<>"'/]/ig;
+            return str.replace(reg, (match)=>(map[match]));
+        }
+
+        // ==========================================
+        // 2. VARIÁVEIS GERAIS DO SISTEMA
+        // ==========================================
         let appMode = 'desktop';
         let html5QrCode = null;
         let churchesMapping = {};    
-        let allInventoryData = [];   
-        let currentChurchInventory =[]; 
+        let allInventoryData =[];   
+        let currentChurchInventory = []; 
         let unreadItems =[];        
         let currentInputEnabled = false;
         let lastScanTime = 0;
@@ -185,7 +249,6 @@
             else document.getElementById('reader-container').style.display = 'none';
         }
 
-        // Sistema de Bip totalmente blindado
         function playBeep() {
             try {
                 if (!audioContext) return;
@@ -199,7 +262,9 @@
             } catch (e) { console.log("Áudio bloqueado", e); }
         }
 
-        // Leitura Refinada (Processando Qualquer CSV: Windows/Mac/Linux)
+        // ==========================================
+        // 3. LEITURA DE ARQUIVOS (COM FILTRO DE SEGURANÇA)
+        // ==========================================
         document.getElementById('fileIgrejas').addEventListener('change', function(event) {
             const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
@@ -217,10 +282,12 @@
                         const cols = row.split(delimiter);
                         if (cols.length >= 2) {
                             const code = cols[0].trim().replace(/[^0-9]/g, ""); 
-                            const name = cols[1].trim().replace(/^"|"$/g, '');
+                            // Aplicando a sanitização no nome lido do Excel
+                            const name = sanitizeText(cols[1].trim().replace(/^"|"$/g, ''));
+                            
                             if (code && !name.toLowerCase().includes("nome")) {
                                 churchesMapping[code] = name;
-                                select.appendChild(new Option(`${cols[0].trim()} - ${name}`, code));
+                                select.appendChild(new Option(`${code} - ${name}`, code));
                                 count++;
                             }
                         }
@@ -263,9 +330,9 @@
                         
                         if (codigo) {
                             allInventoryData.push({
-                                codigo: codigo,
-                                nome: (cols[idxNome] || "-").replace(/^"|"$/g, ''),
-                                dependencia: (cols[idxDependencia] || "-").replace(/^"|"$/g, ''),
+                                codigo: sanitizeText(codigo),
+                                nome: sanitizeText((cols[idxNome] || "-").replace(/^"|"$/g, '')),
+                                dependencia: sanitizeText((cols[idxDependencia] || "-").replace(/^"|"$/g, '')),
                                 status: "Não Localizado",
                                 churchCode: "Desconhecida" 
                             });
@@ -277,29 +344,24 @@
             }; reader.readAsText(file, 'ISO-8859-1');
         });
 
-        // -------------------------------------------------------------
-        // FUNÇÃO PROTEGIDA: INICIAR INVENTÁRIO
-        // -------------------------------------------------------------
+        // ==========================================
+        // 4. LÓGICA DE INVENTÁRIO
+        // ==========================================
         function startInventory() {
             try {
-                // 1. Validar se Arquivos e Campos estão Ok
                 if (allInventoryData.length === 0) {
-                    alert("A Base Geral não foi carregada ou está vazia. Impossível iniciar.");
-                    return;
+                    alert("A Base Geral não foi carregada ou está vazia."); return;
                 }
                 const selectedChurchCode = document.getElementById('casaOracaoSelect').value;
                 if (!selectedChurchCode) {
-                    alert("Por favor, selecione a Casa de Oração.");
-                    return;
+                    alert("Por favor, selecione a Casa de Oração."); return;
                 }
 
-                // 2. Destravar Sistema de Som do Navegador
                 if (!audioContext) {
                     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
                     if (AudioContextClass) audioContext = new AudioContextClass();
                 }
 
-                // 3. Filtragem e Preenchimento
                 const churchCodes = Object.keys(churchesMapping).sort((a, b) => b.length - a.length);
                 allInventoryData.forEach(item => {
                     for (let cCode of churchCodes) {
@@ -313,17 +375,14 @@
                 unreadItems =[];
                 currentInputEnabled = true;
 
-                // Desativa os controles
                 document.getElementById('btnStart').disabled = true;
                 document.getElementById('btnFinalize').disabled = false;
                 document.getElementById('fileIgrejas').disabled = true;
                 document.getElementById('fileGeral').disabled = true;
                 document.getElementById('casaOracaoSelect').disabled = true;
 
-                renderTable();
-                updateCounters();
+                renderTable(); updateCounters();
 
-                // 4. Execução Pós Validação
                 if(appMode === 'desktop') {
                     const inputBem = document.getElementById('bemEscaneado');
                     inputBem.readOnly = false;
@@ -331,42 +390,31 @@
                     inputBem.focus();
                     inputBem.addEventListener('keypress', event => {
                         if (event.key === "Enter" && currentInputEnabled) {
-                            processBarcode(event.target.value);
+                            processBarcode(sanitizeText(event.target.value));
                             event.target.value = "";
                         }
                     });
                 } else {
-                    if (typeof Html5Qrcode === "undefined") {
-                        throw new Error("Biblioteca da câmera bloqueada ou sem internet.");
-                    }
-
+                    if (typeof Html5Qrcode === "undefined") throw new Error("Biblioteca da câmera bloqueada ou sem internet.");
                     const readerContainer = document.getElementById('reader-container');
                     const cameraStatus = document.getElementById('camera-status');
                     
-                    // Exibe a área na tela
                     readerContainer.style.display = 'block';
                     cameraStatus.innerText = "Aguardando Câmera...";
 
-                    // Força a tela a rolar para baixo no celular para ver a câmera
-                    setTimeout(() => {
-                        readerContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 100);
+                    setTimeout(() => { readerContainer.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
 
-                    // Delay crucial para a lente não falhar e causar travamento do App!
                     setTimeout(() => {
                         try {
-                            document.getElementById('reader').innerHTML = ""; // limpa bugs
+                            document.getElementById('reader').innerHTML = ""; 
                             html5QrCode = new Html5Qrcode("reader");
-                            
-                            // Configuração leve (Sem Qrbox travado)
                             html5QrCode.start(
-                                { facingMode: "environment" }, 
-                                { fps: 10 }, 
+                                { facingMode: "environment" }, { fps: 10 }, 
                                 (decodedText) => {
                                     if (Date.now() - lastScanTime > 1500 && currentInputEnabled) {
                                         lastScanTime = Date.now();
                                         playBeep();
-                                        processBarcode(decodedText);
+                                        processBarcode(sanitizeText(decodedText));
                                     }
                                 }
                             ).then(() => {
@@ -377,17 +425,12 @@
                                 cameraStatus.style.backgroundColor = "var(--danger)";
                                 alert("Erro de Câmera: " + err);
                             });
-                        } catch (camErr) {
-                            alert("Falha interna de Vídeo: " + camErr.message);
-                        }
-                    }, 400); // 400ms para garantir que a renderização CSS ocorreu
+                        } catch (camErr) { alert("Falha interna de Vídeo: " + camErr.message); }
+                    }, 400); 
                 }
-            } catch (err) {
-                alert("Erro grave ao iniciar inventário: " + err.message);
-            }
+            } catch (err) { alert("Erro grave ao iniciar: " + err.message); }
         }
 
-        // Processamento de Código (Sem Alterações)
         function processBarcode(rawBarcode) {
             if (!rawBarcode) return;
             const formattedBarcode = rawBarcode.replace(/[^0-9]/g, "").substring(0, 12);
@@ -412,7 +455,6 @@
             renderTable(); updateCounters();
         }
 
-        // Painéis e Tabelas
         function updateCounters() {
             const total = currentChurchInventory.length;
             const located = currentChurchInventory.filter(i => i.status === "Localizado").length;
@@ -428,14 +470,14 @@
             const allItems =[...currentChurchInventory, ...unreadItems];
 
             if(allItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Nenhum item localizado para esta Casa de Oração.</td></tr>`;
-                return;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Nenhum item localizado para esta Casa de Oração.</td></tr>`; return;
             }
 
             allItems.forEach(item => {
                 let badgeClass = item.status === "Localizado" ? "bg-success" : item.status === "Não Localizado" ? "bg-danger" : "bg-warning";
                 const extraHTML = item.infoExtra ? `<span class="alerta-ext">${item.infoExtra}</span>` : "";
                 
+                // Os dados já foram passados na função SanitizeHTML lá na leitura do arquivo
                 tbody.insertAdjacentHTML('beforeend', `<tr>
                     <td><strong>${item.codigo}</strong></td>
                     <td>${item.nome} ${extraHTML}</td>
@@ -445,17 +487,15 @@
             });
         }
 
-        // Finalizar Inventário
+        // ==========================================
+        // 5. GERAÇÃO DO PDF SEGURO
+        // ==========================================
         function finalizeInventory() {
             if (!confirm("Deseja finalizar o inventário e gerar o relatório PDF?")) return;
             currentInputEnabled = false;
 
             if (html5QrCode) {
-                try {
-                    html5QrCode.stop().then(() => {
-                        document.getElementById('reader-container').style.display = 'none';
-                    }).catch(console.error);
-                } catch(e) { console.error(e); }
+                try { html5QrCode.stop().then(() => { document.getElementById('reader-container').style.display = 'none'; }).catch(e=>{}); } catch(e) {}
             }
 
             const { jsPDF } = window.jspdf;
@@ -464,11 +504,17 @@
             doc.setFontSize(16); doc.setTextColor(42, 157, 143);
             doc.text("Relatório de Inventário - Casa de Oração", 14, 20);
             
+            // Sanitização do PDF
+            const invName = sanitizeText(document.getElementById('nomeInventariante').value);
+            const adminSector = sanitizeText(document.getElementById('setorAdministrativo').value);
+            const date = sanitizeText(document.getElementById('dataInventario').value);
+            const churchName = document.getElementById('casaOracaoSelect').options[document.getElementById('casaOracaoSelect').selectedIndex].text;
+
             doc.setFontSize(10); doc.setTextColor(51, 51, 51);
-            doc.text(`Inventariante: ${document.getElementById('nomeInventariante').value}`, 14, 30);
-            doc.text(`Setor Adm: ${document.getElementById('setorAdministrativo').value}`, 14, 36);
-            doc.text(`Local: ${document.getElementById('casaOracaoSelect').options[document.getElementById('casaOracaoSelect').selectedIndex].text}`, 14, 42);
-            doc.text(`Data: ${document.getElementById('dataInventario').value}`, 14, 48);
+            doc.text(`Inventariante: ${invName}`, 14, 30);
+            doc.text(`Setor Adm: ${adminSector}`, 14, 36);
+            doc.text(`Local: ${churchName}`, 14, 42);
+            doc.text(`Data: ${date}`, 14, 48);
 
             const allItems = [...currentChurchInventory, ...unreadItems];
             const tableData = allItems.map(item =>[ item.codigo, item.infoExtra ? `${item.nome}\n\n>> ${item.infoExtra}` : item.nome, item.dependencia, item.status ]);
@@ -488,7 +534,7 @@
             const pdfURL = URL.createObjectURL(doc.output("blob"));
             const downloadLink = document.createElement("a");
             downloadLink.href = pdfURL;
-            downloadLink.download = `Inventario.pdf`;
+            downloadLink.download = `Inventario_Seguro.pdf`;
             downloadLink.click();
         }
     </script>

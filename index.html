@@ -4,386 +4,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Inventário - Múltiplas Casas de Oração</title>
+    
     <!-- Bibliotecas PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <!-- Biblioteca Leitor de Código de Barras (Câmera) -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    
+    <!-- Biblioteca Leitor de Câmera (Mais Estável) -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* Reset e Variáveis */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         :root {
-            --primary: #2a9d8f;
-            --primary-hover: #21867a;
-            --bg-color: #eef2f7;
-            --panel-bg: #ffffff;
-            --text-main: #333;
-            --text-muted: #6c757d;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
+            --primary: #2a9d8f; --primary-hover: #21867a;
+            --bg-color: #eef2f7; --panel-bg: #ffffff;
+            --text-main: #333; --text-muted: #6c757d;
+            --success: #28a745; --danger: #dc3545; --warning: #ffc107;
         }
 
-        body {
-            display: flex;
-            height: 100vh;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow: hidden;
-        }
+        body { display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
 
-        /* Modal de Seleção de Modo */
+        /* Modal de Seleção */
         #modeOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 9999; display: flex;
+            align-items: center; justify-content: center;
         }
-
-        .mode-card {
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 90%;
-            width: 400px;
-        }
-
-            .mode-card h2 {
-                margin-bottom: 20px;
-                color: var(--primary);
-            }
-
+        .mode-card { background: #fff; padding: 30px; border-radius: 10px; text-align: center; max-width: 90%; width: 400px; }
+        .mode-card h2 { margin-bottom: 20px; color: var(--primary); }
         .mode-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 15px;
-            font-size: 1.1rem;
-            border: 2px solid var(--primary);
-            background: white;
-            color: var(--primary);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.3s;
-            font-weight: 600;
+            display: flex; align-items: center; justify-content: center; width: 100%; padding: 15px; margin-bottom: 15px;
+            font-size: 1.1rem; border: 2px solid var(--primary); background: white; color: var(--primary);
+            border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: 600;
         }
-
-            .mode-btn:hover {
-                background: var(--primary);
-                color: white;
-            }
-
-            .mode-btn span {
-                font-size: 1.5rem;
-                margin-right: 10px;
-            }
-
-        /* Sidebar (Controles) */
+        .mode-btn:hover { background: var(--primary); color: white; }
+        
+        /* Sidebar */
         .sidebar {
-            width: 380px;
-            background-color: var(--panel-bg);
-            padding: 20px;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            z-index: 10;
+            width: 380px; background-color: var(--panel-bg); padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow-y: auto; z-index: 10;
         }
+        .header-logo { text-align: center; margin-bottom: 20px; }
+        .header-logo img { height: 70px; margin-bottom: 10px; }
+        .header-logo h1 { font-size: 1.2rem; color: var(--primary); }
 
-        .header-logo {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-            .header-logo img {
-                height: 70px;
-                margin-bottom: 10px;
-            }
-
-            .header-logo h1 {
-                font-size: 1.2rem;
-                color: var(--primary);
-            }
-
-        .input-group {
-            margin-bottom: 12px;
-        }
-
-            .input-group label {
-                display: block;
-                font-size: 0.85rem;
-                font-weight: 600;
-                color: var(--text-muted);
-                margin-bottom: 5px;
-            }
-
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
         input[type="file"], input[type="text"], select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            background-color: #fff;
+            width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.9rem; background-color: #fff;
         }
-
-            input:focus, select:focus {
-                border-color: var(--primary);
-                outline: none;
-            }
-
-            input:read-only, select:disabled {
-                background-color: #e9ecef;
-                cursor: not-allowed;
-            }
+        input:focus, select:focus { border-color: var(--primary); outline: none; }
+        input:read-only, select:disabled { background-color: #e9ecef; cursor: not-allowed; }
 
         button {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 10px;
+            width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none;
+            border-radius: 5px; font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 10px;
         }
+        button:hover { background-color: var(--primary-hover); }
+        button:disabled { background-color: #a5c7c3; cursor: not-allowed; }
+        .btn-danger { background-color: var(--danger); }
 
-            button:hover {
-                background-color: var(--primary-hover);
-            }
+        /* Leitor Câmera */
+        #reader-container { display: none; margin-top: 15px; width: 100%; border-radius: 8px; overflow: hidden; border: 2px solid var(--primary); background: #000; min-height: 250px;}
+        #reader { width: 100%; }
+        #camera-status { text-align: center; font-size: 0.85rem; font-weight: bold; padding: 10px; color: white; background: #333; }
 
-            button:disabled {
-                background-color: #a5c7c3;
-                cursor: not-allowed;
-            }
+        /* Main Dashboard */
+        .main-content { flex: 1; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
+        .dashboard-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .card { background: var(--panel-bg); padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; }
+        .card h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
+        .card .value { font-size: 1.8rem; font-weight: 600; margin-top: 5px; }
+        .c-total { color: #007bff; } .c-located { color: var(--success); } .c-missing { color: var(--danger); } .c-unknown { color: var(--warning); }
 
-        .btn-danger {
-            background-color: var(--danger);
-        }
+        .table-container { flex: 1; background: var(--panel-bg); border-radius: 8px; padding: 15px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        th { background-color: #f8f9fa; position: sticky; top: 0; color: var(--text-muted); z-index: 5; }
+        .badge { padding: 5px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: white; }
+        .bg-success { background-color: var(--success); } .bg-danger { background-color: var(--danger); } .bg-warning { background-color: var(--warning); color: #333; }
+        .alerta-ext { color: #d9534f; font-weight: 600; font-size: 0.85em; display: block; margin-top: 4px; }
 
-            .btn-danger:hover {
-                background-color: #b02a37;
-            }
-
-        /* Câmera Mobile */
-        #reader-container {
-            display: none;
-            margin-top: 15px;
-            width: 100%;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 2px solid var(--primary);
-        }
-
-        /* Main Area (Dashboard) */
-        .main-content {
-            flex: 1;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-
-        .dashboard-cards {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .card {
-            background: var(--panel-bg);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            text-align: center;
-        }
-
-            .card h3 {
-                font-size: 0.8rem;
-                color: var(--text-muted);
-                text-transform: uppercase;
-            }
-
-            .card .value {
-                font-size: 1.8rem;
-                font-weight: 600;
-                margin-top: 5px;
-            }
-
-        .c-total {
-            color: #007bff;
-        }
-
-        .c-located {
-            color: var(--success);
-        }
-
-        .c-missing {
-            color: var(--danger);
-        }
-
-        .c-unknown {
-            color: var(--warning);
-        }
-
-        .table-container {
-            flex: 1;
-            background: var(--panel-bg);
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            overflow-y: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        th {
-            background-color: #f8f9fa;
-            position: sticky;
-            top: 0;
-            color: var(--text-muted);
-            z-index: 5;
-        }
-
-        tr:hover {
-            background-color: #f1f3f5;
-        }
-
-        .badge {
-            padding: 5px 8px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: white;
-        }
-
-        .bg-success {
-            background-color: var(--success);
-        }
-
-        .bg-danger {
-            background-color: var(--danger);
-        }
-
-        .bg-warning {
-            background-color: var(--warning);
-            color: #333;
-        }
-
-        .alerta-ext {
-            color: #d9534f;
-            font-weight: 600;
-            font-size: 0.85em;
-            display: block;
-            margin-top: 4px;
-        }
-
-        /* RESPONSIVIDADE PARA CELULAR */
+        /* CORREÇÃO DO BLOQUEIO DE ROLAGEM NO MOBILE */
         @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-                overflow-y: auto;
-            }
-
-            .sidebar {
-                width: 100%;
-                box-shadow: none;
-                padding: 15px;
-                z-index: 1;
-                overflow-y: visible;
-            }
-
-            .main-content {
-                padding: 15px;
-                overflow-y: visible;
-            }
-
-            .dashboard-cards {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-            }
-
-            .card .value {
-                font-size: 1.5rem;
-            }
-
-            .table-container {
-                padding: 10px;
-                overflow-x: auto;
-            }
-
-            th, td {
-                white-space: nowrap;
-            }
+            body { flex-direction: column; display: block; overflow-y: auto; height: auto; min-height: 100vh; }
+            .sidebar { width: 100%; padding: 15px; box-shadow: none; overflow-y: visible; }
+            .main-content { padding: 10px; overflow-y: visible; display: block; }
+            .dashboard-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .table-container { overflow-x: auto; max-height: 60vh; }
+            th, td { white-space: nowrap; }
         }
     </style>
 </head>
 <body>
 
-    <!-- OVERLAY DE SELEÇÃO DE MODO -->
     <div id="modeOverlay">
         <div class="mode-card">
             <h2>Como você vai usar?</h2>
-            <button class="mode-btn" onclick="setAppMode('desktop')">
-                <span>💻</span> Computador<br><small style="font-size: 0.7rem; margin-left: 10px;">(Leitor de Código USB)</small>
-            </button>
-            <button class="mode-btn" onclick="setAppMode('mobile')">
-                <span>📱</span> Celular<br><small style="font-size: 0.7rem; margin-left: 10px;">(Câmera do Celular)</small>
-            </button>
+            <button class="mode-btn" onclick="setAppMode('desktop')">💻 Computador</button>
+            <button class="mode-btn" onclick="setAppMode('mobile')">📱 Celular (Câmera)</button>
         </div>
     </div>
 
-    <!-- SIDEBAR CONTROLES -->
     <div class="sidebar">
         <div class="header-logo">
+            <!-- Caso a logo quebre, troque este link futuramente -->
             <img src="https://congregacaocristanobrasil.org.br/assets/images/logo-ccb-light.png" alt="Logotipo">
             <h1>INVENTÁRIO ATIVO</h1>
         </div>
 
         <div class="input-group">
-            <label>1. Tabela de Casas de Oração (CSV)</label>
-            <input type="file" id="fileIgrejas" accept=".csv" title="Col 0: Código | Col 1: Nome">
+            <label>1. Tabela de Casas de Oração</label>
+            <input type="file" id="fileIgrejas" accept=".csv">
         </div>
 
         <div class="input-group">
-            <label>2. Base Geral de Bens (CSV)</label>
-            <input type="file" id="fileGeral" accept=".csv" title="Base contendo todas as igrejas">
+            <label>2. Base Geral de Bens</label>
+            <input type="file" id="fileGeral" accept=".csv">
         </div>
 
         <div class="input-group">
-            <label>Casa de Oração a Inventariar</label>
-            <select id="casaOracaoSelect">
-                <option value="">Aguardando Tabela de Igrejas...</option>
-            </select>
+            <label>Casa de Oração</label>
+            <select id="casaOracaoSelect"><option value="">Aguardando Arquivo...</option></select>
         </div>
 
         <div class="input-group">
@@ -395,45 +137,29 @@
 
         <button id="btnStart" onclick="startInventory()">Iniciar Inventário</button>
 
-        <div class="input-group" style="margin-top: 20px;">
+        <div class="input-group" id="containerLeitorFisico" style="margin-top: 20px;">
             <label>Leitor de Código de Barras</label>
             <input type="text" id="bemEscaneado" placeholder="Aguardando início..." readonly>
+        </div>
+
+        <div id="reader-container">
+            <div id="camera-status">Aguardando Câmera...</div>
+            <div id="reader"></div>
         </div>
 
         <button id="btnFinalize" class="btn-danger" onclick="finalizeInventory()" disabled>Finalizar e Gerar PDF</button>
     </div>
 
-    <!-- MAIN DASHBOARD -->
     <div class="main-content">
         <div class="dashboard-cards">
-            <div class="card">
-                <h3>Total</h3>
-                <div class="value c-total" id="countTotal">0</div>
-            </div>
-            <div class="card">
-                <h3>Lidos</h3>
-                <div class="value c-located" id="countLocated">0</div>
-            </div>
-            <div class="card">
-                <h3>Faltam</h3>
-                <div class="value c-missing" id="countMissing">0</div>
-            </div>
-            <div class="card">
-                <h3>Externos</h3>
-                <div class="value c-unknown" id="countUnknown">0</div>
-            </div>
+            <div class="card"><h3>Total</h3><div class="value c-total" id="countTotal">0</div></div>
+            <div class="card"><h3>Lidos</h3><div class="value c-located" id="countLocated">0</div></div>
+            <div class="card"><h3>Faltam</h3><div class="value c-missing" id="countMissing">0</div></div>
+            <div class="card"><h3>Externos</h3><div class="value c-unknown" id="countUnknown">0</div></div>
         </div>
-
         <div class="table-container">
             <table>
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Nome / Descrição</th>
-                        <th>Dependência</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Código</th><th>Nome / Descrição</th><th>Dependência</th><th>Status</th></tr></thead>
                 <tbody id="tableBody">
                     <tr><td colspan="4" style="text-align:center; color:#6c757d;">Aguardando início do inventário...</td></tr>
                 </tbody>
@@ -442,336 +168,231 @@
     </div>
 
     <script>
-        let appMode = 'desktop'; // desktop ou mobile
+        let appMode = 'desktop';
         let html5QrCode = null;
-        
-        let churchesMapping = {};
-        let allInventoryData =[];
-        let currentChurchInventory =[];
-        let unreadItems =[];
+        let churchesMapping = {};    
+        let allInventoryData = [];   
+        let currentChurchInventory =[]; 
+        let unreadItems =[];        
         let currentInputEnabled = false;
-        let lastScanTime = 0; // Previne múltiplas leituras rápidas da câmera
+        let lastScanTime = 0;
+        let audioContext = null;
 
-        // -------------------------------------------------------------
-        // SELEÇÃO DE MODO (Desktop ou Mobile)
-        // -------------------------------------------------------------
         function setAppMode(mode) {
             appMode = mode;
             document.getElementById('modeOverlay').style.display = 'none';
-
-            if(mode === 'mobile') {
-                document.getElementById('containerLeitorFisico').style.display = 'none';
-            } else {
-                document.getElementById('reader-container').style.display = 'none';
-            }
+            if(mode === 'mobile') document.getElementById('containerLeitorFisico').style.display = 'none';
+            else document.getElementById('reader-container').style.display = 'none';
         }
 
-        // Função para emitir Som de "Bip" no Celular
+        // Sistema de Bip totalmente blindado
         function playBeep() {
             try {
-                const context = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = context.createOscillator();
-                const gainNode = context.createGain();
-                oscillator.type = 'sine';
-                oscillator.frequency.value = 1000; // Frequência do Bip
-                gainNode.gain.setValueAtTime(1, context.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.1);
-                oscillator.connect(gainNode);
-                gainNode.connect(context.destination);
-                oscillator.start();
-                oscillator.stop(context.currentTime + 0.1);
-            } catch (e) { console.log("Áudio não suportado", e); }
+                if (!audioContext) return;
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.type = 'sine'; oscillator.frequency.value = 1000;
+                gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+                oscillator.connect(gainNode); gainNode.connect(audioContext.destination);
+                oscillator.start(); oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) { console.log("Áudio bloqueado", e); }
         }
 
-        // -------------------------------------------------------------
-        // 1. LER ARQUIVO DE CASAS DE ORAÇÃO
-        // -------------------------------------------------------------
+        // Leitura Refinada (Processando Qualquer CSV: Windows/Mac/Linux)
         document.getElementById('fileIgrejas').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
+            const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const rows = e.target.result.split(/\r?\n/);
-                churchesMapping = {};
-                const select = document.getElementById('casaOracaoSelect');
-                select.innerHTML = '<option value="">Selecione a Casa de Oração...</option>';
-                
-                const sample = rows.slice(0, 5).join('\n');
-                const delimiter = sample.indexOf(';') !== -1 ? ';' : ',';
+                try {
+                    const rows = e.target.result.split(/\r\n|\n|\r/);
+                    churchesMapping = {};
+                    const select = document.getElementById('casaOracaoSelect');
+                    select.innerHTML = '<option value="">Selecione a Casa de Oração...</option>';
+                    const delimiter = rows[0].indexOf(';') !== -1 ? ';' : ',';
+                    let count = 0;
 
-                let count = 0;
-                rows.forEach(row => {
-                    if (!row.trim()) return;
-                    const cols = row.split(delimiter);
-                    if (cols.length >= 2) {
-                        const rawCode = cols[0].trim();
-                        const code = rawCode.replace(/[^0-9]/g, ""); 
-                        const name = cols[1].trim().replace(/^"|"$/g, '');
-                        
-                        if (code && name && !name.toLowerCase().includes("nome") && !rawCode.toLowerCase().includes("código")) {
-                            churchesMapping[code] = name;
-                            const opt = document.createElement('option');
-                            opt.value = code;
-                            opt.textContent = `${rawCode} - ${name}`;
-                            select.appendChild(opt);
-                            count++;
+                    rows.forEach(row => {
+                        if (!row.trim()) return;
+                        const cols = row.split(delimiter);
+                        if (cols.length >= 2) {
+                            const code = cols[0].trim().replace(/[^0-9]/g, ""); 
+                            const name = cols[1].trim().replace(/^"|"$/g, '');
+                            if (code && !name.toLowerCase().includes("nome")) {
+                                churchesMapping[code] = name;
+                                select.appendChild(new Option(`${cols[0].trim()} - ${name}`, code));
+                                count++;
+                            }
                         }
-                    }
-                });
-                alert(`Tabela de Igrejas: ${count} casas de oração registradas!`);
-            };
-            reader.readAsText(file, 'ISO-8859-1');
+                    });
+                    if(count > 0) alert(`Igrejas carregadas: ${count} locais.`);
+                    else alert("Nenhuma igreja válida encontrada no arquivo CSV!");
+                } catch(e) { alert("Erro de arquivo: " + e.message); }
+            }; reader.readAsText(file, 'ISO-8859-1');
         });
-        // -------------------------------------------------------------
-        // 2. LER ARQUIVO GERAL DE BENS (Busca Dinâmica pelas Colunas)
-        // -------------------------------------------------------------
-        document.getElementById('fileGeral').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
 
+        document.getElementById('fileGeral').addEventListener('change', function(event) {
+            const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = function (e) {
-                const rows = e.target.result.split(/\r?\n/);
-                allInventoryData =[];
+                try {
+                    const rows = e.target.result.split(/\r\n|\n|\r/);
+                    allInventoryData =[];
+                    let startIndex = 1, delimiter = ';';
+                    let idxCodigo = 0, idxNome = 1, idxDependencia = 5;
 
-                let startIndex = 0;
-                let delimiter = ';';
-                let idxCodigo = 0, idxNome = 3, idxDependencia = 15; // Valores padrão se falhar
-
-                // PROCURA O CABEÇALHO PARA IDENTIFICAR AS POSIÇÕES DAS COLUNAS
-                for (let i = 0; i < rows.length; i++) {
-                    const line = rows[i].toLowerCase();
-                    if (line.includes("código") || line.includes("codigo") || line.includes("nome")) {
-                        startIndex = i + 1; 
-                        delimiter = line.indexOf(';') !== -1 ? ';' : ',';
+                    for (let i = 0; i < Math.min(10, rows.length); i++) {
+                        const line = rows[i] ? rows[i].toLowerCase() : "";
+                        if (line.includes("código") || line.includes("codigo") || line.includes("cod")) {
+                            startIndex = i + 1; 
+                            delimiter = line.indexOf(';') !== -1 ? ';' : ',';
+                            line.split(delimiter).forEach((h, index) => {
+                                if (h.includes("cod")) idxCodigo = index;
+                                if (h.includes("nome") || h.includes("desc")) idxNome = index;
+                                if (h.includes("dep") || h.includes("loc")) idxDependencia = index;
+                            });
+                            break;
+                        }
+                    }
+                    
+                    rows.slice(startIndex).forEach(row => {
+                        if (!row.trim()) return;
+                        const cols = row.split(delimiter); 
+                        const rawCode = cols[idxCodigo] ? cols[idxCodigo] : "";
+                        const codigo = rawCode.replace(/[^0-9]/g, "").substring(0, 12);
                         
-                        // Mapeia dinamicamente os índices
-                        const headers = line.split(delimiter).map(h => h.trim());
-                        headers.forEach((h, index) => {
-                            if (h.includes("código") || h.includes("codigo")) idxCodigo = index;
-                            if (h.includes("nome") || h.includes("descri")) idxNome = index;
-                            if (h.includes("depend") || h.includes("local")) idxDependencia = index;
-                        });
-                        break;
-                    }
-                }
-                
-                if (startIndex === 0) startIndex = 1;
-
-                const dataRows = rows.slice(startIndex);
-                
-                dataRows.forEach(row => {
-                    if (!row.trim()) return;
-                    const cols = row.split(delimiter); 
-                    
-                    const codigoRaw = cols[idxCodigo] || cols[0]; // Puxa do índice encontrado ou 0
-                    const codigo = codigoRaw?.trim().replace(/[^0-9]/g, "").substring(0, 12);
-                    
-                    if (codigo) {
-                        const rawNome = cols[idxNome] || cols[1] || "-";
-                        const rawDep = cols[idxDependencia] || cols[5] || "-";
-
-                        allInventoryData.push({
-                            codigo: codigo,
-                            nome: rawNome.trim().replace(/^"|"$/g, ''),
-                            dependencia: rawDep.trim().replace(/^"|"$/g, ''),
-                            status: "Não Localizado",
-                            churchCode: "Desconhecida" 
-                        });
-                    }
-                });
-                alert(`Base Geral: ${allInventoryData.length} bens carregados com sucesso!`);
-            };
-            reader.readAsText(file, 'ISO-8859-1');
+                        if (codigo) {
+                            allInventoryData.push({
+                                codigo: codigo,
+                                nome: (cols[idxNome] || "-").replace(/^"|"$/g, ''),
+                                dependencia: (cols[idxDependencia] || "-").replace(/^"|"$/g, ''),
+                                status: "Não Localizado",
+                                churchCode: "Desconhecida" 
+                            });
+                        }
+                    });
+                    if (allInventoryData.length > 0) alert(`Bens carregados: ${allInventoryData.length} itens.`);
+                    else alert("Nenhum bem válido encontrado no arquivo CSV!");
+                } catch(e) { alert("Erro de arquivo: " + e.message); }
+            }; reader.readAsText(file, 'ISO-8859-1');
         });
 
         // -------------------------------------------------------------
-        // INICIAR INVENTÁRIO
-        // -------------------------------------------------------------
-        function startInventory() {
-            const selectedChurchCode = document.getElementById('casaOracaoSelect').value;
-            
-            if (!selectedChurchCode || allInventoryData.length === 0) {
-                alert("Carregue as duas bases e selecione a Casa de Oração.");
-                return;
-            }
-
-            const churchCodes = Object.keys(churchesMapping).sort((a, b) => b.length - a.length);
-            allInventoryData.forEach(item => {
-                for (let cCode of churchCodes) {
-                    if (item.codigo.startsWith(cCode)) {
-                        item.churchCode = cCode; break;
-                    }
-                }
-            });
-
-            currentChurchInventory = allInventoryData.filter(item => item.churchCode === selectedChurchCode);
-            unreadItems =[];
-
-            currentInputEnabled = true;
-            document.getElementById('btnStart').disabled = true;
-            document.getElementById('btnFinalize').disabled = false;['fileIgrejas', 'fileGeral', 'casaOracaoSelect'].forEach(id => document.getElementById(id).disabled = true);
-
-            // Inicia Lógica dependendo do Modo
-            if(appMode === 'desktop') {
-                const inputBem = document.getElementById('bemEscaneado');
-                inputBem.readOnly = false;
-                inputBem.placeholder = "Escaneie o código aqui...";
-                inputBem.focus();
-                
-                inputBem.addEventListener('keypress', event => {
-                    if (event.key === "Enter" && currentInputEnabled) {
-                        processBarcode(event.target.value);
-                        event.target.value = "";
-                    }
-                });
-            } else {
-                // Modo Celular: Ativa a Câmera
-                const readerContainer = document.getElementById('reader-container');
-                const readerDiv = document.getElementById('reader');
-                readerContainer.style.display = 'block';
-                readerDiv.innerHTML = "<p style='text-align:center; padding: 20px; font-weight:bold;'>Solicitando acesso à câmera...</p>";
-
-                // Alerta importante se não estiver em ambiente seguro
-                if (window.isSecureContext === false) {
-                    alert("Atenção: Seu navegador pode bloquear a câmera porque o site não está em HTTPS ou localhost. Hospede o sistema para que funcione corretamente.");
-                }
-
-                // 1º Passo: Forçar o pedido de permissão listando as câmeras
-                Html5Qrcode.getCameras().then(devices => {
-                    if (devices && devices.length) {
-                        // 2º Passo: Permissão concedida, inicia o leitor
-                        readerDiv.innerHTML = ""; // Limpa a mensagem
-                        html5QrCode = new Html5Qrcode("reader");
-                        const config = { fps: 10, qrbox: { width: 250, height: 100 } };
-                        
-                        html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-                            // Impede leitura dupla muito rápida
-                            if (Date.now() - lastScanTime > 1500 && currentInputEnabled) {
-                                lastScanTime = Date.now();
-                                playBeep(); // Toca o Bip
-                                processBarcode(decodedText);
-                            }
-                        }).catch(err => {
-                            alert("Erro ao iniciar o vídeo da câmera: " + err);
-                        });
-                    } else {
-                        alert("Nenhuma câmera encontrada no dispositivo.");
-                        readerDiv.innerHTML = "<p style='text-align:center; color: red;'>Nenhuma câmera encontrada.</p>";
-                    }
-                }).catch(err => {
-                    alert("Acesso à câmera negado ou bloqueado pelo navegador.");
-                    readerDiv.innerHTML = "<p style='text-align:center; color: red; padding:10px;'>Permissão negada. Verifique as configurações do seu navegador.</p>";
-                    console.error("Erro de permissão da câmera:", err);
-                });
-            }
-
-            renderTable();
-            updateCounters();
-        }
-// -------------------------------------------------------------
-        // INICIAR INVENTÁRIO (COM PROTEÇÃO CONTRA ERROS DE CÂMERA)
+        // FUNÇÃO PROTEGIDA: INICIAR INVENTÁRIO
         // -------------------------------------------------------------
         function startInventory() {
             try {
+                // 1. Validar se Arquivos e Campos estão Ok
+                if (allInventoryData.length === 0) {
+                    alert("A Base Geral não foi carregada ou está vazia. Impossível iniciar.");
+                    return;
+                }
                 const selectedChurchCode = document.getElementById('casaOracaoSelect').value;
-                
-                if (!selectedChurchCode || allInventoryData.length === 0) {
-                    alert("Carregue as duas bases e selecione a Casa de Oração.");
+                if (!selectedChurchCode) {
+                    alert("Por favor, selecione a Casa de Oração.");
                     return;
                 }
 
-                // Faz o filtro de Igreja
+                // 2. Destravar Sistema de Som do Navegador
+                if (!audioContext) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContextClass) audioContext = new AudioContextClass();
+                }
+
+                // 3. Filtragem e Preenchimento
                 const churchCodes = Object.keys(churchesMapping).sort((a, b) => b.length - a.length);
                 allInventoryData.forEach(item => {
                     for (let cCode of churchCodes) {
-                        if (item.codigo.startsWith(cCode)) {
-                            item.churchCode = cCode; 
-                            break;
+                        if (item.codigo && item.codigo.startsWith(cCode)) {
+                            item.churchCode = cCode; break;
                         }
                     }
                 });
 
                 currentChurchInventory = allInventoryData.filter(item => item.churchCode === selectedChurchCode);
                 unreadItems =[];
-
                 currentInputEnabled = true;
-                
-                // Desativa botões de controle
+
+                // Desativa os controles
                 document.getElementById('btnStart').disabled = true;
                 document.getElementById('btnFinalize').disabled = false;
                 document.getElementById('fileIgrejas').disabled = true;
                 document.getElementById('fileGeral').disabled = true;
                 document.getElementById('casaOracaoSelect').disabled = true;
 
-                // 1º - Atualiza a tabela imediatamente (remove o "aguardando...")
                 renderTable();
                 updateCounters();
 
-                // 2º - Inicia Lógica dependendo do Modo
+                // 4. Execução Pós Validação
                 if(appMode === 'desktop') {
                     const inputBem = document.getElementById('bemEscaneado');
                     inputBem.readOnly = false;
                     inputBem.placeholder = "Escaneie o código aqui...";
                     inputBem.focus();
-                    
                     inputBem.addEventListener('keypress', event => {
                         if (event.key === "Enter" && currentInputEnabled) {
                             processBarcode(event.target.value);
                             event.target.value = "";
                         }
                     });
-
                 } else {
-                    // MODO MOBILE
-                    const readerContainer = document.getElementById('reader-container');
-                    const readerDiv = document.getElementById('reader');
-                    readerContainer.style.display = 'block';
-                    readerDiv.innerHTML = "<p style='text-align:center; padding: 20px; font-weight:bold; color: var(--primary);'>Solicitando acesso à câmera...</p>";
+                    if (typeof Html5Qrcode === "undefined") {
+                        throw new Error("Biblioteca da câmera bloqueada ou sem internet.");
+                    }
 
-                    // Tenta acessar a câmera com proteção de erro crítico
-                    try {
-                        Html5Qrcode.getCameras().then(devices => {
-                            if (devices && devices.length) {
-                                readerDiv.innerHTML = ""; // Limpa a mensagem
-                                html5QrCode = new Html5Qrcode("reader");
-                                const config = { fps: 10, qrbox: { width: 250, height: 100 } };
-                                
-                                html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+                    const readerContainer = document.getElementById('reader-container');
+                    const cameraStatus = document.getElementById('camera-status');
+                    
+                    // Exibe a área na tela
+                    readerContainer.style.display = 'block';
+                    cameraStatus.innerText = "Aguardando Câmera...";
+
+                    // Força a tela a rolar para baixo no celular para ver a câmera
+                    setTimeout(() => {
+                        readerContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+
+                    // Delay crucial para a lente não falhar e causar travamento do App!
+                    setTimeout(() => {
+                        try {
+                            document.getElementById('reader').innerHTML = ""; // limpa bugs
+                            html5QrCode = new Html5Qrcode("reader");
+                            
+                            // Configuração leve (Sem Qrbox travado)
+                            html5QrCode.start(
+                                { facingMode: "environment" }, 
+                                { fps: 10 }, 
+                                (decodedText) => {
                                     if (Date.now() - lastScanTime > 1500 && currentInputEnabled) {
                                         lastScanTime = Date.now();
                                         playBeep();
                                         processBarcode(decodedText);
                                     }
-                                }).catch(err => {
-                                    readerDiv.innerHTML = `<p style='text-align:center; color: red; padding:10px;'>Erro ao abrir vídeo: ${err}</p>`;
-                                });
-                            } else {
-                                readerDiv.innerHTML = "<p style='text-align:center; color: red; padding:10px;'>Nenhuma câmera encontrada.</p>";
-                            }
-                        }).catch(err => {
-                            readerDiv.innerHTML = `<p style='text-align:center; color: red; padding:10px;'>Permissão negada ou bloqueada: ${err}</p>`;
-                        });
-                    } catch (cameraError) {
-                        // Se cair aqui, é porque o navegador bloqueou a API por falta de HTTPS
-                        readerDiv.innerHTML = "<p style='text-align:center; color: red; padding:15px; font-size: 0.9rem;'><b>Câmera Bloqueada pelo Navegador!</b><br>Para usar no celular, o sistema precisa estar hospedado em um link seguro (HTTPS).</p>";
-                        console.error("Erro Crítico da Câmera: ", cameraError);
-                    }
+                                }
+                            ).then(() => {
+                                cameraStatus.innerText = "Câmera Ativa. Aponte para o Código.";
+                                cameraStatus.style.backgroundColor = "var(--success)";
+                            }).catch(err => {
+                                cameraStatus.innerText = "Erro/Permissão Negada!";
+                                cameraStatus.style.backgroundColor = "var(--danger)";
+                                alert("Erro de Câmera: " + err);
+                            });
+                        } catch (camErr) {
+                            alert("Falha interna de Vídeo: " + camErr.message);
+                        }
+                    }, 400); // 400ms para garantir que a renderização CSS ocorreu
                 }
-            } catch (globalError) {
-                alert("Erro inesperado ao iniciar: " + globalError.message);
-                console.error(globalError);
+            } catch (err) {
+                alert("Erro grave ao iniciar inventário: " + err.message);
             }
         }
-        // -------------------------------------------------------------
-        // PROCESSAR LEITURA
-        // -------------------------------------------------------------
+
+        // Processamento de Código (Sem Alterações)
         function processBarcode(rawBarcode) {
             if (!rawBarcode) return;
             const formattedBarcode = rawBarcode.replace(/[^0-9]/g, "").substring(0, 12);
             let foundInCurrent = false;
-
+            
             for (let item of currentChurchInventory) {
                 if (item.codigo === formattedBarcode) {
                     item.status = "Localizado";
@@ -783,19 +404,15 @@
                 const foundInGlobal = allInventoryData.find(item => item.codigo === formattedBarcode);
                 if (foundInGlobal) {
                     const nomeIgrejaAlheia = churchesMapping[foundInGlobal.churchCode] || "Igreja Desconhecida";
-                    unreadItems.push({ ...foundInGlobal, status: "Não Identificado",
-                        infoExtra: `Atenção: Esse bem pertence à casa de oração: ${nomeIgrejaAlheia}` });
+                    unreadItems.push({ ...foundInGlobal, status: "Não Identificado", infoExtra: `Atenção: Este bem é da ${nomeIgrejaAlheia}` });
                 } else {
-                    unreadItems.push({ codigo: formattedBarcode, nome: "Item não consta na Base Geral",
-                        dependencia: "-", status: "Não Identificado", infoExtra: "" });
+                    unreadItems.push({ codigo: formattedBarcode, nome: "Não consta na Base Geral", dependencia: "-", status: "Não Identificado", infoExtra: "" });
                 }
             }
             renderTable(); updateCounters();
         }
 
-        // -------------------------------------------------------------
-        // RENDERIZAÇÃO E ATUALIZAÇÃO DA INTERFACE
-        // -------------------------------------------------------------
+        // Painéis e Tabelas
         function updateCounters() {
             const total = currentChurchInventory.length;
             const located = currentChurchInventory.filter(i => i.status === "Localizado").length;
@@ -810,11 +427,15 @@
             tbody.innerHTML = "";
             const allItems =[...currentChurchInventory, ...unreadItems];
 
-            allItems.forEach(item => {
-                let badgeClass = item.status === "Localizado" ? "bg-success" :
-                                 item.status === "Não Localizado" ? "bg-danger" : "bg-warning";
-                const extraHTML = item.infoExtra ? `<span class="alerta-ext">${item.infoExtra}</span>` : "";
+            if(allItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Nenhum item localizado para esta Casa de Oração.</td></tr>`;
+                return;
+            }
 
+            allItems.forEach(item => {
+                let badgeClass = item.status === "Localizado" ? "bg-success" : item.status === "Não Localizado" ? "bg-danger" : "bg-warning";
+                const extraHTML = item.infoExtra ? `<span class="alerta-ext">${item.infoExtra}</span>` : "";
+                
                 tbody.insertAdjacentHTML('beforeend', `<tr>
                     <td><strong>${item.codigo}</strong></td>
                     <td>${item.nome} ${extraHTML}</td>
@@ -824,16 +445,17 @@
             });
         }
 
-        // -------------------------------------------------------------
-        // FINALIZAR E GERAR PDF
-        // -------------------------------------------------------------
+        // Finalizar Inventário
         function finalizeInventory() {
             if (!confirm("Deseja finalizar o inventário e gerar o relatório PDF?")) return;
             currentInputEnabled = false;
 
-            // Desliga a câmera se estiver no modo celular
             if (html5QrCode) {
-                html5QrCode.stop().then(() => document.getElementById('reader-container').style.display = 'none').catch(console.error);
+                try {
+                    html5QrCode.stop().then(() => {
+                        document.getElementById('reader-container').style.display = 'none';
+                    }).catch(console.error);
+                } catch(e) { console.error(e); }
             }
 
             const { jsPDF } = window.jspdf;
@@ -841,14 +463,14 @@
 
             doc.setFontSize(16); doc.setTextColor(42, 157, 143);
             doc.text("Relatório de Inventário - Casa de Oração", 14, 20);
-
+            
             doc.setFontSize(10); doc.setTextColor(51, 51, 51);
             doc.text(`Inventariante: ${document.getElementById('nomeInventariante').value}`, 14, 30);
             doc.text(`Setor Adm: ${document.getElementById('setorAdministrativo').value}`, 14, 36);
             doc.text(`Local: ${document.getElementById('casaOracaoSelect').options[document.getElementById('casaOracaoSelect').selectedIndex].text}`, 14, 42);
             doc.text(`Data: ${document.getElementById('dataInventario').value}`, 14, 48);
 
-            const allItems =[...currentChurchInventory, ...unreadItems];
+            const allItems = [...currentChurchInventory, ...unreadItems];
             const tableData = allItems.map(item =>[ item.codigo, item.infoExtra ? `${item.nome}\n\n>> ${item.infoExtra}` : item.nome, item.dependencia, item.status ]);
 
             doc.autoTable({

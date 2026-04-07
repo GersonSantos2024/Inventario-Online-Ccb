@@ -5,108 +5,421 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <!-- Política de Segurança (CSP): Bloqueia scripts hackers externos -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://congregacaocristanobrasil.org.br; connect-src 'self' blob:;">
-    
+
     <title>Inventário - Múltiplas Casas de Oração</title>
-    
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        :root {
-            --primary: #2a9d8f; --primary-hover: #21867a;
-            --bg-color: #eef2f7; --panel-bg: #ffffff;
-            --text-main: #333; --text-muted: #6c757d;
-            --success: #28a745; --danger: #dc3545; --warning: #ffc107;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
         }
 
-        body { display: flex; height: 100vh; background-color: var(--bg-color); color: var(--text-main); overflow: hidden; }
+        :root {
+            --primary: #2a9d8f;
+            --primary-hover: #21867a;
+            --bg-color: #eef2f7;
+            --panel-bg: #ffffff;
+            --text-main: #333;
+            --text-muted: #6c757d;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow: hidden;
+        }
 
         /* --- TELA DE LOGIN SEGURA --- */
         #loginOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            z-index: 99999; display: flex; align-items: center; justify-content: center;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
         .login-card {
-            background: #fff; padding: 40px 30px; border-radius: 12px; text-align: center; max-width: 90%; width: 350px;
+            background: #fff;
+            padding: 40px 30px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 90%;
+            width: 350px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
-        .login-card img { height: 60px; margin-bottom: 20px; }
-        .login-card h2 { margin-bottom: 20px; color: #333; font-size: 1.4rem; }
-        .login-card input {
-            width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ced4da;
-            border-radius: 6px; font-size: 1rem; text-align: center;
+
+            .login-card img {
+                height: 60px;
+                margin-bottom: 20px;
+            }
+
+            .login-card h2 {
+                margin-bottom: 20px;
+                color: #333;
+                font-size: 1.4rem;
+            }
+
+            .login-card input {
+                width: 100%;
+                padding: 12px;
+                margin-bottom: 15px;
+                border: 1px solid #ced4da;
+                border-radius: 6px;
+                font-size: 1rem;
+                text-align: center;
+            }
+
+            .login-card button {
+                background-color: #1e3c72;
+                font-size: 1.1rem;
+            }
+
+                .login-card button:hover {
+                    background-color: #162c55;
+                }
+
+        #loginError {
+            color: var(--danger);
+            font-size: 0.9rem;
+            margin-top: 10px;
+            display: none;
+            font-weight: 600;
         }
-        .login-card button { background-color: #1e3c72; font-size: 1.1rem; }
-        .login-card button:hover { background-color: #162c55; }
-        #loginError { color: var(--danger); font-size: 0.9rem; margin-top: 10px; display: none; font-weight: 600; }
 
         /* Modal de Seleção de Câmera/PC */
         #modeOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 9999; display: none; /* Escondido até fazer login */
-            align-items: center; justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            display: none; /* Escondido até fazer login */
+            align-items: center;
+            justify-content: center;
         }
-        .mode-card { background: #fff; padding: 30px; border-radius: 10px; text-align: center; max-width: 90%; width: 400px; }
-        .mode-card h2 { margin-bottom: 20px; color: var(--primary); }
+
+        .mode-card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+        }
+
+            .mode-card h2 {
+                margin-bottom: 20px;
+                color: var(--primary);
+            }
+
         .mode-btn {
-            display: flex; align-items: center; justify-content: center; width: 100%; padding: 15px; margin-bottom: 15px;
-            font-size: 1.1rem; border: 2px solid var(--primary); background: white; color: var(--primary);
-            border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            border: 2px solid var(--primary);
+            background: white;
+            color: var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
         }
-        .mode-btn:hover { background: var(--primary); color: white; }
-        
+
+            .mode-btn:hover {
+                background: var(--primary);
+                color: white;
+            }
+
         /* O restante do seu CSS original */
-        .sidebar { width: 380px; background-color: var(--panel-bg); padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow-y: auto; z-index: 10; filter: blur(4px); pointer-events: none; transition: 0.3s; }
-        .sidebar.unlocked { filter: blur(0); pointer-events: all; }
-        .header-logo { text-align: center; margin-bottom: 20px; }
-        .header-logo img { height: 70px; margin-bottom: 10px; }
-        .header-logo h1 { font-size: 1.2rem; color: var(--primary); }
-
-        .input-group { margin-bottom: 12px; }
-        .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
-        input[type="file"], input[type="text"], input[type="password"], select {
-            width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.9rem; background-color: #fff; outline: none;
+        .sidebar {
+            width: 380px;
+            background-color: var(--panel-bg);
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            z-index: 10;
+            filter: blur(4px);
+            pointer-events: none;
+            transition: 0.3s;
         }
-        input:focus, select:focus { border-color: var(--primary); }
-        input:read-only, select:disabled { background-color: #e9ecef; cursor: not-allowed; }
 
-        button { width: 100%; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 5px; font-weight: 600; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        button:hover { background-color: var(--primary-hover); }
-        button:disabled { background-color: #a5c7c3; cursor: not-allowed; }
-        .btn-danger { background-color: var(--danger); }
+            .sidebar.unlocked {
+                filter: blur(0);
+                pointer-events: all;
+            }
 
-        #reader-container { display: none; margin-top: 15px; width: 100%; border-radius: 8px; overflow: hidden; border: 2px solid var(--primary); background: #000; min-height: 250px;}
-        #reader { width: 100%; }
-        #camera-status { text-align: center; font-size: 0.85rem; font-weight: bold; padding: 10px; color: white; background: #333; }
+        .header-logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
-        .main-content { flex: 1; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; filter: blur(4px); pointer-events: none; transition: 0.3s; }
-        .main-content.unlocked { filter: blur(0); pointer-events: all; }
-        
-        .dashboard-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        .card { background: var(--panel-bg); padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; }
-        .card h3 { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
-        .card .value { font-size: 1.8rem; font-weight: 600; margin-top: 5px; }
-        .c-total { color: #007bff; } .c-located { color: var(--success); } .c-missing { color: var(--danger); } .c-unknown { color: var(--warning); }
+            .header-logo img {
+                height: 70px;
+                margin-bottom: 10px;
+            }
 
-        .table-container { flex: 1; background: var(--panel-bg); border-radius: 8px; padding: 15px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6; }
-        th { background-color: #f8f9fa; position: sticky; top: 0; color: var(--text-muted); z-index: 5; }
-        .badge { padding: 5px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: white; }
-        .bg-success { background-color: var(--success); } .bg-danger { background-color: var(--danger); } .bg-warning { background-color: var(--warning); color: #333; }
-        .alerta-ext { color: #d9534f; font-weight: 600; font-size: 0.85em; display: block; margin-top: 4px; }
+            .header-logo h1 {
+                font-size: 1.2rem;
+                color: var(--primary);
+            }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+            .input-group label {
+                display: block;
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: var(--text-muted);
+                margin-bottom: 5px;
+            }
+
+        input[type="file"], input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            background-color: #fff;
+            outline: none;
+        }
+
+            input:focus, select:focus {
+                border-color: var(--primary);
+            }
+
+            input:read-only, select:disabled {
+                background-color: #e9ecef;
+                cursor: not-allowed;
+            }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+            button:hover {
+                background-color: var(--primary-hover);
+            }
+
+            button:disabled {
+                background-color: #a5c7c3;
+                cursor: not-allowed;
+            }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        #reader-container {
+            display: none;
+            margin-top: 15px;
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid var(--primary);
+            background: #000;
+            min-height: 250px;
+        }
+
+        #reader {
+            width: 100%;
+        }
+
+        #camera-status {
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            padding: 10px;
+            color: white;
+            background: #333;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            filter: blur(4px);
+            pointer-events: none;
+            transition: 0.3s;
+        }
+
+            .main-content.unlocked {
+                filter: blur(0);
+                pointer-events: all;
+            }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+            .card h3 {
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                text-transform: uppercase;
+            }
+
+            .card .value {
+                font-size: 1.8rem;
+                font-weight: 600;
+                margin-top: 5px;
+            }
+
+        .c-total {
+            color: #007bff;
+        }
+
+        .c-located {
+            color: var(--success);
+        }
+
+        .c-missing {
+            color: var(--danger);
+        }
+
+        .c-unknown {
+            color: var(--warning);
+        }
+
+        .table-container {
+            flex: 1;
+            background: var(--panel-bg);
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            color: var(--text-muted);
+            z-index: 5;
+        }
+
+        .badge {
+            padding: 5px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .bg-success {
+            background-color: var(--success);
+        }
+
+        .bg-danger {
+            background-color: var(--danger);
+        }
+
+        .bg-warning {
+            background-color: var(--warning);
+            color: #333;
+        }
+
+        .alerta-ext {
+            color: #d9534f;
+            font-weight: 600;
+            font-size: 0.85em;
+            display: block;
+            margin-top: 4px;
+        }
 
         @media (max-width: 768px) {
-            body { flex-direction: column; display: block; overflow-y: auto; height: auto; min-height: 100vh; }
-            .sidebar { width: 100%; padding: 15px; box-shadow: none; overflow-y: visible; }
-            .main-content { padding: 10px; overflow-y: visible; display: block; }
-            .dashboard-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .table-container { overflow-x: auto; max-height: 60vh; }
-            th, td { white-space: nowrap; }
+            body {
+                flex-direction: column;
+                display: block;
+                overflow-y: auto;
+                height: auto;
+                min-height: 100vh;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 15px;
+                box-shadow: none;
+                overflow-y: visible;
+            }
+
+            .main-content {
+                padding: 10px;
+                overflow-y: visible;
+                display: block;
+            }
+
+            .dashboard-cards {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .table-container {
+                overflow-x: auto;
+                max-height: 60vh;
+            }
+
+            th, td {
+                white-space: nowrap;
+            }
         }
     </style>
 </head>
@@ -200,9 +513,9 @@
         // ==========================================
         function checkAccess() {
             const pwd = document.getElementById('sysPassword').value;
-            
+
             // ---> ALTERE SUA SENHA AQUI <---
-            const senhaCorreta = "ccb2026"; 
+            const senhaCorreta = "ccb2026";
 
             if (pwd === senhaCorreta) {
                 // Desbloqueia tela
@@ -217,7 +530,7 @@
         }
 
         // Permite logar apertando "Enter"
-        document.getElementById('sysPassword').addEventListener('keypress', function(e) {
+        document.getElementById('sysPassword').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') checkAccess();
         });
 
@@ -226,7 +539,7 @@
             if (!str) return "-";
             const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', "/": '&#x2F;' };
             const reg = /[&<>"'/]/ig;
-            return str.replace(reg, (match)=>(map[match]));
+            return str.replace(reg, (match) => (map[match]));
         }
 
         // ==========================================
@@ -234,10 +547,10 @@
         // ==========================================
         let appMode = 'desktop';
         let html5QrCode = null;
-        let churchesMapping = {};    
-        let allInventoryData =[];   
-        let currentChurchInventory = []; 
-        let unreadItems =[];        
+        let churchesMapping = {};
+        let allInventoryData = [];
+        let currentChurchInventory = [];
+        let unreadItems = [];
         let currentInputEnabled = false;
         let lastScanTime = 0;
         let audioContext = null;
@@ -245,7 +558,7 @@
         function setAppMode(mode) {
             appMode = mode;
             document.getElementById('modeOverlay').style.display = 'none';
-            if(mode === 'mobile') document.getElementById('containerLeitorFisico').style.display = 'none';
+            if (mode === 'mobile') document.getElementById('containerLeitorFisico').style.display = 'none';
             else document.getElementById('reader-container').style.display = 'none';
         }
 
@@ -265,10 +578,10 @@
         // ==========================================
         // 3. LEITURA DE ARQUIVOS (COM FILTRO DE SEGURANÇA)
         // ==========================================
-        document.getElementById('fileIgrejas').addEventListener('change', function(event) {
+        document.getElementById('fileIgrejas').addEventListener('change', function (event) {
             const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 try {
                     const rows = e.target.result.split(/\r\n|\n|\r/);
                     churchesMapping = {};
@@ -281,10 +594,10 @@
                         if (!row.trim()) return;
                         const cols = row.split(delimiter);
                         if (cols.length >= 2) {
-                            const code = cols[0].trim().replace(/[^0-9]/g, ""); 
+                            const code = cols[0].trim().replace(/[^0-9]/g, "");
                             // Aplicando a sanitização no nome lido do Excel
                             const name = sanitizeText(cols[1].trim().replace(/^"|"$/g, ''));
-                            
+
                             if (code && !name.toLowerCase().includes("nome")) {
                                 churchesMapping[code] = name;
                                 select.appendChild(new Option(`${code} - ${name}`, code));
@@ -292,26 +605,26 @@
                             }
                         }
                     });
-                    if(count > 0) alert(`Igrejas carregadas: ${count} locais.`);
+                    if (count > 0) alert(`Igrejas carregadas: ${count} locais.`);
                     else alert("Nenhuma igreja válida encontrada no arquivo CSV!");
-                } catch(e) { alert("Erro de arquivo: " + e.message); }
+                } catch (e) { alert("Erro de arquivo: " + e.message); }
             }; reader.readAsText(file, 'ISO-8859-1');
         });
 
-        document.getElementById('fileGeral').addEventListener('change', function(event) {
+        document.getElementById('fileGeral').addEventListener('change', function (event) {
             const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = function (e) {
                 try {
                     const rows = e.target.result.split(/\r\n|\n|\r/);
-                    allInventoryData =[];
+                    allInventoryData = [];
                     let startIndex = 1, delimiter = ';';
                     let idxCodigo = 0, idxNome = 1, idxDependencia = 5;
 
                     for (let i = 0; i < Math.min(10, rows.length); i++) {
                         const line = rows[i] ? rows[i].toLowerCase() : "";
                         if (line.includes("código") || line.includes("codigo") || line.includes("cod")) {
-                            startIndex = i + 1; 
+                            startIndex = i + 1;
                             delimiter = line.indexOf(';') !== -1 ? ';' : ',';
                             line.split(delimiter).forEach((h, index) => {
                                 if (h.includes("cod")) idxCodigo = index;
@@ -321,26 +634,26 @@
                             break;
                         }
                     }
-                    
+
                     rows.slice(startIndex).forEach(row => {
                         if (!row.trim()) return;
-                        const cols = row.split(delimiter); 
+                        const cols = row.split(delimiter);
                         const rawCode = cols[idxCodigo] ? cols[idxCodigo] : "";
                         const codigo = rawCode.replace(/[^0-9]/g, "").substring(0, 12);
-                        
+
                         if (codigo) {
                             allInventoryData.push({
                                 codigo: sanitizeText(codigo),
                                 nome: sanitizeText((cols[idxNome] || "-").replace(/^"|"$/g, '')),
                                 dependencia: sanitizeText((cols[idxDependencia] || "-").replace(/^"|"$/g, '')),
                                 status: "Não Localizado",
-                                churchCode: "Desconhecida" 
+                                churchCode: "Desconhecida"
                             });
                         }
                     });
                     if (allInventoryData.length > 0) alert(`Bens carregados: ${allInventoryData.length} itens.`);
                     else alert("Nenhum bem válido encontrado no arquivo CSV!");
-                } catch(e) { alert("Erro de arquivo: " + e.message); }
+                } catch (e) { alert("Erro de arquivo: " + e.message); }
             }; reader.readAsText(file, 'ISO-8859-1');
         });
 
@@ -372,7 +685,7 @@
                 });
 
                 currentChurchInventory = allInventoryData.filter(item => item.churchCode === selectedChurchCode);
-                unreadItems =[];
+                unreadItems = [];
                 currentInputEnabled = true;
 
                 document.getElementById('btnStart').disabled = true;
@@ -383,7 +696,7 @@
 
                 renderTable(); updateCounters();
 
-                if(appMode === 'desktop') {
+                if (appMode === 'desktop') {
                     const inputBem = document.getElementById('bemEscaneado');
                     inputBem.readOnly = false;
                     inputBem.placeholder = "Escaneie o código aqui...";
@@ -398,7 +711,7 @@
                     if (typeof Html5Qrcode === "undefined") throw new Error("Biblioteca da câmera bloqueada ou sem internet.");
                     const readerContainer = document.getElementById('reader-container');
                     const cameraStatus = document.getElementById('camera-status');
-                    
+
                     readerContainer.style.display = 'block';
                     cameraStatus.innerText = "Aguardando Câmera...";
 
@@ -406,10 +719,10 @@
 
                     setTimeout(() => {
                         try {
-                            document.getElementById('reader').innerHTML = ""; 
+                            document.getElementById('reader').innerHTML = "";
                             html5QrCode = new Html5Qrcode("reader");
                             html5QrCode.start(
-                                { facingMode: "environment" }, { fps: 10 }, 
+                                { facingMode: "environment" }, { fps: 10 },
                                 (decodedText) => {
                                     if (Date.now() - lastScanTime > 1500 && currentInputEnabled) {
                                         lastScanTime = Date.now();
@@ -426,7 +739,7 @@
                                 alert("Erro de Câmera: " + err);
                             });
                         } catch (camErr) { alert("Falha interna de Vídeo: " + camErr.message); }
-                    }, 400); 
+                    }, 400);
                 }
             } catch (err) { alert("Erro grave ao iniciar: " + err.message); }
         }
@@ -435,7 +748,7 @@
             if (!rawBarcode) return;
             const formattedBarcode = rawBarcode.replace(/[^0-9]/g, "").substring(0, 12);
             let foundInCurrent = false;
-            
+
             for (let item of currentChurchInventory) {
                 if (item.codigo === formattedBarcode) {
                     item.status = "Localizado";
@@ -467,23 +780,23 @@
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = "";
-            const allItems =[...currentChurchInventory, ...unreadItems];
+            const allItems = [...currentChurchInventory, ...unreadItems];
 
-            if(allItems.length === 0) {
+            if (allItems.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">Nenhum item localizado para esta Casa de Oração.</td></tr>`; return;
             }
 
             allItems.forEach(item => {
                 let badgeClass = item.status === "Localizado" ? "bg-success" : item.status === "Não Localizado" ? "bg-danger" : "bg-warning";
                 const extraHTML = item.infoExtra ? `<span class="alerta-ext">${item.infoExtra}</span>` : "";
-                
+
                 // Os dados já foram passados na função SanitizeHTML lá na leitura do arquivo
                 tbody.insertAdjacentHTML('beforeend', `<tr>
-                    <td><strong>${item.codigo}</strong></td>
-                    <td>${item.nome} ${extraHTML}</td>
-                    <td>${item.dependencia}</td>
-                    <td><span class="badge ${badgeClass}">${item.status}</span></td>
-                </tr>`);
+                        <td><strong>${item.codigo}</strong></td>
+                        <td>${item.nome} ${extraHTML}</td>
+                        <td>${item.dependencia}</td>
+                        <td><span class="badge ${badgeClass}">${item.status}</span></td>
+                    </tr>`);
             });
         }
 
@@ -495,7 +808,7 @@
             currentInputEnabled = false;
 
             if (html5QrCode) {
-                try { html5QrCode.stop().then(() => { document.getElementById('reader-container').style.display = 'none'; }).catch(e=>{}); } catch(e) {}
+                try { html5QrCode.stop().then(() => { document.getElementById('reader-container').style.display = 'none'; }).catch(e => { }); } catch (e) { }
             }
 
             const { jsPDF } = window.jspdf;
@@ -503,7 +816,7 @@
 
             doc.setFontSize(16); doc.setTextColor(42, 157, 143);
             doc.text("Relatório de Inventário - Casa de Oração", 14, 20);
-            
+
             // Sanitização do PDF
             const invName = sanitizeText(document.getElementById('nomeInventariante').value);
             const adminSector = sanitizeText(document.getElementById('setorAdministrativo').value);
@@ -517,16 +830,16 @@
             doc.text(`Data: ${date}`, 14, 48);
 
             const allItems = [...currentChurchInventory, ...unreadItems];
-            const tableData = allItems.map(item =>[ item.codigo, item.infoExtra ? `${item.nome}\n\n>> ${item.infoExtra}` : item.nome, item.dependencia, item.status ]);
+            const tableData = allItems.map(item => [item.codigo, item.infoExtra ? `${item.nome}\n\n>> ${item.infoExtra}` : item.nome, item.dependencia, item.status]);
 
             doc.autoTable({
                 startY: 55, head: [["Código", "Nome / Descrição", "Dependência", "Status"]], body: tableData, theme: 'grid',
-                headStyles: { fillColor:[42, 157, 143] }, styles: { fontSize: 8 }, columnStyles: { 1: { cellWidth: 80 } },
-                didParseCell: function(data) {
+                headStyles: { fillColor: [42, 157, 143] }, styles: { fontSize: 8 }, columnStyles: { 1: { cellWidth: 80 } },
+                didParseCell: function (data) {
                     if (data.section === 'body' && data.column.index === 3) {
-                        if (data.cell.raw === "Localizado") data.cell.styles.textColor =[40, 167, 69];
-                        else if (data.cell.raw === "Não Localizado") data.cell.styles.textColor =[220, 53, 69];
-                        else if (data.cell.raw === "Não Identificado") data.cell.styles.textColor =[220, 120, 0];
+                        if (data.cell.raw === "Localizado") data.cell.styles.textColor = [40, 167, 69];
+                        else if (data.cell.raw === "Não Localizado") data.cell.styles.textColor = [220, 53, 69];
+                        else if (data.cell.raw === "Não Identificado") data.cell.styles.textColor = [220, 120, 0];
                     }
                 }
             });

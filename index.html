@@ -6,7 +6,7 @@
     <!-- Política de Segurança (CSP): Bloqueia scripts hackers externos -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://congregacaocristanobrasil.org.br; connect-src 'self' blob:;">
 
-    <title>Inventário - Múltiplas Casas de Oração</title>
+    <title>Inventário CCB online</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -623,7 +623,7 @@
 
                     for (let i = 0; i < Math.min(10, rows.length); i++) {
                         const line = rows[i] ? rows[i].toLowerCase() : "";
-                        if (line.includes("código") || line.includes("codigo") || line.includes("cod")) {
+                        if (line.includes("código") || line.includes("nome") || line.includes("dependência")) {
                             startIndex = i + 1;
                             delimiter = line.indexOf(';') !== -1 ? ';' : ',';
                             line.split(delimiter).forEach((h, index) => {

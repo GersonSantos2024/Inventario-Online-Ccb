@@ -6,12 +6,10 @@
     <!-- Política de Segurança (CSP) -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://congregacaocristanobrasil.org.br; connect-src 'self' blob:;">
     
-    <title>Inventário - CCB Online </title>
+    <title>Inventário - Múltiplas Casas de Oração</title>
     
-    <!-- Bibliotecas PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <!-- Leitor de Câmera -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -216,7 +214,7 @@
         }
         document.getElementById('sysPassword').addEventListener('keypress', function(e) { if (e.key === 'Enter') checkAccess(); });
 
-        // Proteção Anti-Hacker (Sanitização no momento da renderização)
+        // Proteção Anti-Hacker
         function sanitizeText(str) {
             if (!str) return "-";
             const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', "/": '&#x2F;' };
@@ -225,20 +223,47 @@
         }
 
         // ==========================================
-        // 2. FUNÇÃO ROBUSTA DE LEITURA DO CSV (Corrige colunas sumindo)
+        // 2. PARSER AVANÇADO DE ARQUIVOS (Ignora erros de quebras e aspas no Excel)
         // ==========================================
-        function splitCSV(row, delimiter) {
-            let cols =[];
-            let inQuotes = false;
+        function parseCSV(text) {
+            const sample = text.substring(0, 1000);
+            const delimiter = sample.indexOf(';') !== -1 ? ';' : ',';
+            
+            let result = [];
+            let row =[];
             let current = "";
-            for (let i = 0; i < row.length; i++) {
-                let char = row[i];
-                if (char === '"') { inQuotes = !inQuotes; } 
-                else if (char === delimiter && !inQuotes) { cols.push(current.trim()); current = ""; } 
-                else { current += char; }
+            let inQuotes = false;
+            
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                let nextChar = text[i+1];
+
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        current += '"';
+                        i++; 
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === delimiter && !inQuotes) {
+                    row.push(current.trim());
+                    current = "";
+                } else if ((char === '\n' || char === '\r') && !inQuotes) {
+                    if (char === '\r' && nextChar === '\n') i++; // Ignora CRLF duplo
+                    row.push(current.trim());
+                    
+                    if (row.some(c => c !== "")) result.push(row);
+                    row =[];
+                    current = "";
+                } else {
+                    current += char;
+                }
             }
-            cols.push(current.trim());
-            return cols;
+            if (current || row.length > 0) {
+                row.push(current.trim());
+                if (row.some(c => c !== "")) result.push(row);
+            }
+            return { data: result, delimiter: delimiter };
         }
 
         // ==========================================
@@ -275,23 +300,20 @@
         }
 
         // ==========================================
-        // 4. LEITURA DE ARQUIVOS (COM PARSER SEGURO)
+        // 4. LEITURA DOS ARQUIVOS (MAIS INTELIGENTE)
         // ==========================================
         document.getElementById('fileIgrejas').addEventListener('change', function(event) {
             const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const rows = e.target.result.split(/\r\n|\n|\r/);
+                    const parsed = parseCSV(e.target.result);
                     churchesMapping = {};
                     const select = document.getElementById('casaOracaoSelect');
                     select.innerHTML = '<option value="">Selecione a Casa de Oração...</option>';
-                    const delimiter = rows[0].indexOf(';') !== -1 ? ';' : ',';
                     let count = 0;
 
-                    rows.forEach(row => {
-                        if (!row.trim()) return;
-                        const cols = splitCSV(row, delimiter);
+                    parsed.data.forEach(cols => {
                         if (cols.length >= 2) {
                             const code = cols[0].replace(/[^0-9]/g, ""); 
                             const name = cols[1];
@@ -313,45 +335,56 @@
             const reader = new FileReader();
             reader.onload = function (e) {
                 try {
-                    const rows = e.target.result.split(/\r\n|\n|\r/);
+                    const parsed = parseCSV(e.target.result);
+                    const rows = parsed.data;
                     allInventoryData =[];
-                    let startIndex = 1, delimiter = ';';
+                    
+                    let startIndex = 1;
                     let idxCodigo = 0, idxNome = 1, idxDependencia = 5;
 
-                    // Procura o cabeçalho limpando as aspas da análise
+                    // Busca de cabeçalhos ultra resiliente (Ignorando acentos)
                     for (let i = 0; i < Math.min(10, rows.length); i++) {
-                        const line = rows[i] ? rows[i].toLowerCase() : "";
-                        if (line.includes("código") || line.includes("codigo") || line.includes("cod")) {
+                        const cols = rows[i];
+                        const lineStr = cols.join(" ").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        
+                        if (lineStr.includes("cod") || lineStr.includes("patrimonio") || lineStr.includes("nome") || lineStr.includes("descri")) {
                             startIndex = i + 1; 
-                            delimiter = line.indexOf(';') !== -1 ? ';' : ',';
-                            const headers = splitCSV(line, delimiter);
-                            headers.forEach((h, index) => {
-                                let cleanH = h.replace(/["']/g, '').trim();
-                                if (cleanH.includes("cod")) idxCodigo = index;
-                                else if (cleanH.includes("nome") || cleanH.includes("descri")) idxNome = index;
-                                else if (cleanH.includes("depend") || cleanH.includes("local")) idxDependencia = index;
+                            
+                            let foundCod = -1, foundNome = -1, foundDep = -1;
+                            
+                            cols.forEach((h, index) => {
+                                let cleanH = h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                                if (cleanH.includes("cod") || cleanH.includes("patrimonio") || cleanH.includes("tombamento")) foundCod = index;
+                                else if (cleanH.includes("nome") || cleanH.includes("descri") || cleanH.includes("bem") || cleanH.includes("produto")) foundNome = index;
+                                else if (cleanH.includes("depend") || cleanH.includes("local") || cleanH.includes("setor") || cleanH.includes("ambiente")) foundDep = index;
                             });
+
+                            if (foundCod !== -1) idxCodigo = foundCod;
+                            if (foundNome !== -1) idxNome = foundNome;
+                            if (foundDep !== -1) idxDependencia = foundDep;
                             break;
                         }
                     }
                     
-                    rows.slice(startIndex).forEach(row => {
-                        if (!row.trim()) return;
-                        const cols = splitCSV(row, delimiter); 
-                        const rawCode = cols[idxCodigo] ? cols[idxCodigo] : "";
+                    rows.slice(startIndex).forEach(cols => {
+                        // Previne o erro de puxar dados vazios caso a coluna Dependência não exista em alguma linha curta do Excel
+                        let curIdxNome = (idxNome < cols.length) ? idxNome : (cols.length > 1 ? 1 : 0);
+                        let curIdxDep = (idxDependencia < cols.length) ? idxDependencia : (cols.length > 2 ? cols.length - 1 : 0);
+
+                        const rawCode = cols[idxCodigo] ? cols[idxCodigo] : cols[0];
                         const codigo = rawCode.replace(/[^0-9]/g, "").substring(0, 12);
                         
                         if (codigo) {
-                            // Salva a string crua e original na memória (Resolve falha do PDF)
                             allInventoryData.push({
                                 codigo: codigo,
-                                nome: cols[idxNome] || "-",
-                                dependencia: cols[idxDependencia] || "-",
+                                nome: cols[curIdxNome] || "-",
+                                dependencia: cols[curIdxDep] || "-",
                                 status: "Não Localizado",
                                 churchCode: "Desconhecida" 
                             });
                         }
                     });
+                    
                     if (allInventoryData.length > 0) alert(`Bens carregados: ${allInventoryData.length} itens.`);
                     else alert("Nenhum bem válido encontrado no arquivo CSV!");
                 } catch(e) { alert("Erro de arquivo: " + e.message); }
@@ -485,8 +518,6 @@
 
             allItems.forEach(item => {
                 let badgeClass = item.status === "Localizado" ? "bg-success" : item.status === "Não Localizado" ? "bg-danger" : "bg-warning";
-                
-                // Aplica a Sanitização APENAS na visualização HTML
                 const safeExtra = item.infoExtra ? sanitizeText(item.infoExtra) : "";
                 const extraHTML = safeExtra ? `<span class="alerta-ext">${safeExtra}</span>` : "";
                 
@@ -529,7 +560,7 @@
 
             const allItems = [...currentChurchInventory, ...unreadItems];
             
-            // Aqui as variáveis vão limpas (sem os códigos do HTML/XSS), então aparecem corretamente no PDF
+            // Aqui as variáveis vão limpas e perfeitas para o PDF
             const tableData = allItems.map(item =>[ 
                 item.codigo, 
                 item.infoExtra ? `${item.nome}\n\n>> ${item.infoExtra}` : item.nome, 
@@ -549,7 +580,7 @@
                 }
             });
 
-            // Salvamento DIRETO AUTOMÁTICO
+            // Salvamento Automático
             const safeChurchName = churchName.replace(/[^a-zA-Z0-9]/g, '_');
             doc.save(`Inventario_${safeChurchName}.pdf`);
         }
